@@ -26,4 +26,7 @@ pub enum NgxLaserError {
 
     #[error("Path not found: {0:?}")]
     PathNotFound(PathBuf),
+
+    #[error("Invalid log format: '{0:?}'")]
+    InvalidLogFormat(&'static str),
 }

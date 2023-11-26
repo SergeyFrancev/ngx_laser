@@ -10,6 +10,7 @@ use crate::NgxLaserError;
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub base_dir: PathBuf,
+    pub format: String,
     // pub sizes: Vec<String>,
 }
 

@@ -30,28 +30,34 @@ fn find_files(
 pub struct FileFinder<'p> {
     roots: &'p [PathBuf],
     check_names: bool,
+    parser: &'p Parser,
 }
 
 impl<'p> FileFinder<'p> {
     pub fn new(
         roots: &'p [PathBuf],
-        check_names: bool,
+        parser: &'p Parser,
     ) -> Self {
         Self {
             roots,
-            check_names,
+            check_names: false,
+            parser,
         }
     }
-    /// return tuples (date, path), sorted, the date being
-    /// the one of the first line in file
-    pub fn dated_files(self) -> Result<Vec<(Date, PathBuf)>, NgxLaserError> {
+
+    pub fn files(&self) -> Result<Vec<PathBuf>, NgxLaserError> {
         let mut files = Vec::new();
         for root in self.roots {
             find_files(root.clone(), &mut files, false, self.check_names)?;
         }
+        Ok(files)
+    }
+
+    pub fn dated_files(&mut self) -> Result<Vec<(Date, PathBuf)>, NgxLaserError> {
+        let mut files = self.files()?;
         let mut dated_files = Vec::new();
         for path in files.drain(..) {
-            if let Some(date) = get_file_first_date(&path)? {
+            if let Some(date) = self.get_file_first_date(&path) {
                 dated_files.push((date, path));
             } else {
                 debug!("no date found in {:?}", path);
@@ -59,6 +65,14 @@ impl<'p> FileFinder<'p> {
         }
         dated_files.sort_unstable_by_key(|t| t.0);
         Ok(dated_files)
+    }
+
+    fn get_file_first_date(&mut self, path: &Path) -> Option<Date> {
+        LogFile::new(path, self.parser)
+            .into_iter()
+            // .take(5)
+            .map(|x| x.date_time.date)
+            .next()
     }
 }
 

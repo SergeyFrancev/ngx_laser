@@ -1,6 +1,4 @@
-use {
-    std::fmt,
-};
+use std::fmt;
 
 /// An HTTP method
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
