@@ -15,14 +15,11 @@ impl LineConsumer for StatusConsumer {
     fn get_data(&self) -> serde_json::Map<String, serde_json::Value> {
         let mut summary = serde_json::Map::new();
         for (&k, &v) in self.counter.iter() {
-            summary.insert(k.to_string(), v.to_string().into());
+            summary.insert(k.to_string(), v.into());
         }
 
         let mut out = serde_json::Map::new();
         out.insert("status".into(), summary.into());
         out
     }
-    // fn reset(&mut self) {
-    //     self.counter = 0;
-    // }
 }

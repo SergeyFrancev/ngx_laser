@@ -12,16 +12,21 @@ pub struct Consumers {
 
 impl Consumers {
     pub fn new() -> Self {
-        let consumers: Vec<Box<dyn LineConsumer>> = Vec::from([
-            Box::new(ResourceConsumer::default()) as Box<dyn LineConsumer>,
-            Box::new(VisitorsConsumer::default()) as Box<dyn LineConsumer>,
-            Box::new(StatusConsumer::default()) as Box<dyn LineConsumer>,
-        ]);
+        let consumers: Vec<Box<dyn LineConsumer>> = Vec::from([]);
         Self {
             consumers,
             lines: Vec::new(),
             size: 0,
         }
+    }
+
+    pub fn add_consumer(&mut self, c: Box<dyn LineConsumer>) {
+        self.consumers.push(c);
+        // [
+        //     Box::new(ResourceConsumer::default()) as Box<dyn LineConsumer>,
+        //     Box::new(VisitorsConsumer::default()) as Box<dyn LineConsumer>,
+        //     Box::new(StatusConsumer::default()) as Box<dyn LineConsumer>,
+        // ]
     }
 
     pub fn eat_line(&mut self, log_line: LogLine) {
