@@ -1,8 +1,11 @@
-use crate::{LineConsumer, LogLine, ResourceConsumer};
+use crate::{LineConsumer, LogLine, ResourceConsumer, VisitorsConsumer, FormatVisitor, StatusConsumer};
+use serde_json::{Map, Value};
+
+// pub trait ConsumerItem:LineConsumer + FormatVisitor;
 
 #[derive(Default)]
 pub struct Consumers {
-    consumers: Vec<Box<dyn LineConsumer>>,
+    pub consumers: Vec<Box<dyn LineConsumer>>,
     lines: Vec<LogLine>,
     size: usize,
 }
@@ -11,6 +14,8 @@ impl Consumers {
     pub fn new() -> Self {
         let consumers: Vec<Box<dyn LineConsumer>> = Vec::from([
             Box::new(ResourceConsumer::default()) as Box<dyn LineConsumer>,
+            Box::new(VisitorsConsumer::default()) as Box<dyn LineConsumer>,
+            Box::new(StatusConsumer::default()) as Box<dyn LineConsumer>,
         ]);
         Self {
             consumers,
@@ -34,8 +39,8 @@ impl Consumers {
         println!("Size of lines[{}]: {} Mb", self.lines.len(), (self.size / 1024) / 1024);
     }
 
-    pub fn get_data(&self) -> serde_json::Map<String, serde_json::Value> {
-        let mut out = serde_json::Map::new();
+    pub fn get_data(&self) -> Map<String, Value> {
+        let mut out = Map::new();
         for c in &self.consumers {
             out.extend(c.get_data());
         }
@@ -44,8 +49,8 @@ impl Consumers {
         out
     }
 
-    fn get_dates(&self) -> serde_json::Map<String, serde_json::Value> {
-        let mut out = serde_json::Map::new();
+    fn get_dates(&self) -> Map<String, Value> {
+        let mut out = Map::new();
         out.insert("date_start".into(), self.lines[0].date_time.to_string().into());
         out.insert("date_end".into(), self.lines[self.lines.len() - 1].date_time.to_string().into());
         out

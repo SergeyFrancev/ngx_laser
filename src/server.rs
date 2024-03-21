@@ -7,7 +7,7 @@ use hyper::{
 };
 use serde_json::json;
 
-use crate::{conf, FileFinder, Consumers, Parser, LogFile};
+use crate::{conf, Consumers, FileFinder, FormatVisitor, LogFile, Parser};
 
 // static GLOBAL_CONFIG: OnceCell<Mutex<Config>> = OnceCell::new();
 
@@ -22,19 +22,19 @@ async fn hello(request: Request<Body>) -> Result<Response<Body>, Infallible> {
     // let mut ua: HashSet<String> = HashSet::new();
     // let paths = [PathBuf::from("/Users/nulldata/Documents/projects/rust/file_db/test_data/big/")];
     let mut file_finder = FileFinder::new(&paths, &parser);
-    let dates = file_finder.dated_files().unwrap();
-    
+
     let mut consumers = Consumers::new();
-    dates.into_iter()
+    file_finder
+        .dated_files()
+        .unwrap()
+        .into_iter()
         .map(|x| x.1)
         .flat_map(|x| LogFile::new(&x, &parser).into_iter())
-        .for_each(|x| {
-            consumers.eat_line(x);
-            // ua.insert(x.remote_addr.to_string());
-        });
+        .for_each(|x| consumers.eat_line(x));
 
     // if res.is_ok() {
     // let res = res.unwrap();
+    // let data = json!(consumers.to_json());
     let data = json!(consumers.get_data());
     return Ok(Response::new(Body::from(data.to_string())));
     // } else {
@@ -51,6 +51,15 @@ async fn hello(request: Request<Body>) -> Result<Response<Body>, Infallible> {
     // }
     // Ok(Response::new(Body::from(format!("Path: {}", "123"))))
 }
+
+// fn router_service() -> Result<RouterService, std::io::Error> {
+//     let router = RouterBuilder::new()
+//         .add(Route::get("/hello").using(request_handler))
+//         .add(Route::from(Method::PATCH, "/asd").using(request_handler))
+//         .build();
+
+//     Ok(RouterService::new(router))
+// }
 
 #[tokio::main]
 pub async fn start(port: u16) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
